@@ -1,0 +1,42 @@
+Panduan Instalasi PI Vision (Versi Santai)
+Bahan-bahan:
+Server yang udah siap dipakai
+Akun khusus buat PI Vision
+File instalasi PI Vision
+
+Langkah-langkah:
+Siapin Servernya Dulu
+Buka port yang dibutuhin (kayak buka pintu buat tamu).
+Download file instalasi PI Vision & software pendukungnya.
+Aktifin fitur khusus di Server Manager (kayak nyalain mode admin).
+Bikin Akun Pelayan (Kalo Butuh)
+Bikin akun khusus (pake akun domain kalo servernya di domain).
+Kasih izin akun ini buat akses:
+SQL Server (database)
+PI Data Archive (tempat nyimpan data)
+PI AF Server (buat manage data)
+Skip kalo pake OpenID Connect (autentikasi modern, ga perlu akun domain).
+
+Jalankan File Instalasi
+Run file instalasi PI Vision.
+Ikutin arahan di layar (kayak pas instal game, next-next aja).
+Masukin info PI AF Server kalo diminta.
+
+Setelan Abis Instal
+Buka website admin PI Vision (http://localhost/PIVision biasanya).
+Bikin database PI Vision.
+Atur akses ke PI Data Archive (biar bisa ngambil data).
+Pastiin PI Vision udah bisa nyambung ke PI Data Archive & PI AF Servers (biar bisa ngambil data penting).
+Kalo pake OpenID Connect (autentikasi modern), skip bagian ribet ini.
+
+Setting Kerberos Delegasi (Kalo Butuh)
+Apa Itu Kerberos?
+Protokol kaya "bodyguard" yang bikin akses data lebih aman di jaringan.
+Kapan Diperlukan?
+Kalo pake autentikasi Windows (bukan OpenID Connect).
+Kalo PI Vision perlu akses data remote (misal: dari server lain).
+
+Cara Setup:
+Aktifin Kerberos delegation di server (nyalain fitur "izin ngambil data atas nama user").
+Atur Service Principal Name (SPN) buat PI Vision (kaya daftarin nomor HP biar dikenali sistem).
+Test koneksi ke PI Data Archive (pastiin ga error).
