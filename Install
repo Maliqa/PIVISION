@@ -40,3 +40,170 @@ Cara Setup:
 Aktifin Kerberos delegation di server (nyalain fitur "izin ngambil data atas nama user").
 Atur Service Principal Name (SPN) buat PI Vision (kaya daftarin nomor HP biar dikenali sistem).
 Test koneksi ke PI Data Archive (pastiin ga error).
+
+
+Apa yang Perlu Disiapin?
+Sebelum install PI Vision, server harus dipersiapin dulu biar nggak error pas jalan nanti.
+
+Langkah-langkahnya:
+1. Buka Port yang Dibutuhin
+Port 443 (port default buat HTTPS) biasanya dipakai.
+
+Kenapa? Biar bisa akses PI Vision langsung pake https://namaserver (tanpa nambahin port di belakang).
+Kalo port 443 udah dipakai sama aplikasi lain, bisa pilih port lain (misal: 8443).
+
+2. Download Software yang Diperlukan
+File instalasi PI Vision (wajib).
+Software pendukung (kalo ada).
+Microsoft SQL Server (kalo belum ada di server).
+
+3. Aktifin Fitur di Server Manager
+Buka Server Manager, terus tambahin fitur yang dibutuhin (kayak IIS, .NET Framework, dll).
+
+Atur Port Biar Ga Tabrakan Kalo port 443 udah dipakai:  
+1. Buka **IIS Manager** (tempat ngatur website di Windows)  
+2. Klik kanan website yang mau dipake → **Edit Bindings**  
+3. Ganti port 443 jadi angka unik (misal *8443*) → **OK**  
+4. *Pro tip:* Abis instal PI Vision, bisa balikin lagi ke port 443 kalo mau  
+
+⚠️ **PENTING:**  
+- Kalo servernya udah ada **PI WebParts/PI Web Services**, bikin **website baru** dengan port beda  
+- Jangan instal PI Vision di website yang udah ada!  
+
+2. Download Bahan-bahannya*  
+Wajib:
+- File instal PI Vision** (download dari AVEVA Customer Portal)  
+
+Opsional:  
+- **SQL Server** (kalo belum ada di server):  
+  - Bisa pake versi Express (gratis) dari Customer Portal juga  
+
+3. Checklist Sebelum Install  
+✅ Port udah disetel (443 atau ganti ke yang lain)  
+✅ File instal PI Vision udah didownload  
+✅ SQL Server udah siap (atau rencana pake yang existing)  
+
+Masalah umum:
+- Kalo error pas install, cek lagi portnya udah bener belum  
+- Pastiin hak akses admin buat install  
+
+
+**Panduan Install SQL Server & IIS untuk PI Vision**  
+*Versi "Santai tapi Ga Asal-asalan"* 😉
+
+---
+
+###A. Install SQL Server (Kalo Belum Ada)
+1. **Download SQL Server**  
+   - Cari di AVEVA Customer Portal, pilih versi yang cocok  
+   - Kalo cuma buat testing, pake **SQL Server Express** (gratis)  
+
+2. **Jalankan Installer**  
+   - Next-next aja sampe selesai  
+   - Pilih **Authentication Mode**:  
+     - **Windows Authentication** (lebih gampang)  
+     - Atau **Mixed Mode** (kalo butuh username/password)  
+
+3. **Note Penting**  
+   - Kalo udah punya SQL Server, **skip langkah ini**  
+   - Pastiin SQL Server bisa diakses dari server PI Vision  
+
+
+### **B. Setting Roles & Features di Server**  
+**PI Vision bisa otomatis setting ini, tapi kalo mau manual:**
+
+1. **Buka Server Manager** → **Add Roles and Features**  
+   *(Tempatnya ada di Start Menu)*  
+
+2. **Pilih Web Server (IIS)**  
+   - Pilih **Role-based installation**  
+   - Centang **Web Server (IIS)**  
+
+3. **Pilih Fitur Wajib:**  
+   - **Windows Process Activation Service**  
+     - Centang: `Process Model` + `Configuration APIs`  
+
+4. **Pilih Role Services (Yang Penting-penting Aja):**  
+   | Kategori              | Wajib                     | Recommended (Nice to Have)       |
+   |-----------------------|---------------------------|----------------------------------|
+   | **Common HTTP**       | ✔ Static Content          | ✔ HTTP Errors                    |
+   |                       | ✔ Default Document        | ✔ HTTP Redirection               |
+   | **Health & Diagnostics** | -                      | ✔ HTTP Logging + Tracing         |
+   | **Performance**       | ✔ Static Content Compression | -                              |
+
+
+### **Tips Biar Ga Error:**  
+1. **Kalo bingung**, biarin PI Vision yang otomatis setting (lebih aman)  
+2. **Restart server** abis install IIS & SQL Server  
+3. **Cek port SQL Server** (default 1433) udah kebuka di firewall  
+
+
+**Contoh Kasus:**  
+*"Server udah jalan, tapi PI Vision ga bisa konek ke SQL Server"*  
+➡️ Solusi:  
+1. Buka **SQL Server Configuration Manager**  
+2. Pastiin **TCP/IP** enabled  
+3. Cek **SQL Server Browser** service jalan  
+
+
+**Rekomendasi Instalasi PI Vision (Versi Simpel)
+Biar ga nyesel pas udah terlanjur install* 🚨  
+
+### **1. Database yang Disarankan**  
+✔ **Pake SQL Server yang sama** dengan PI AF  
+- Kenapa? Biar **ga ribet** manage banyak database  
+- Kalo beda server, bisa lemot atau error connect  
+
+2. Kalo Server Ada di Domain**  
+✔ Pastiin:  
+- **PI Vision**, **PI AF**, dan **Data Archive** ada di domain yang sama  
+- SQL Server-nya juga harus di domain itu  
+
+*Contoh:*  
+- Server PI Vision: `SRV-PIVISION.domain.local`  
+- SQL Server: `SRV-SQL.domain.local`  
+
+
+3. Peringatan Penting!**  
+⚠ **Harus punya SSL Certificate**  
+- Kalo nggak, install bakal **gagal**  
+- Bisa pake sertifikat dari CA atau self-signed (tapi kurang aman)  
+
+⚠ **Versi PI AF & Data Archive**  
+- Cek **versi minimal** yang didukung di dokumentasi  
+- Jangan pake versi jadul, nanti ga bisa connect  
+
+⚠ **Service Account PI Vision**  
+- Catat nama accountnya sebelum install  
+- Kalo lupa, cek di:  
+  `IIS Manager → Application Pools → PI Vision App Pool`  
+
+### **4. Akses User**  
+🔐 **PI Mapping wajib** buat:  
+- Search data di PI AF & Data Archive  
+- *PI Trust saja tidak cukup* (cuma bisa liat data, ga bisa search)  
+
+💡 **Pro Tip:**  
+- Bikin mapping sekaligus buat **group user** biar ga repot  
+
+**Yang Sering Bikin Error:**  
+❌ **SSL Certificate invalid**  
+➡ Solusi: Generate ulang atau beli yang bener  
+
+❌ **Versi PI AF tidak support**  
+➡ Solusi: Update PI AF ke versi terbaru  
+
+❌ **Service Account ga punya akses**  
+➡ Solusi: Kasih permission **db_owner** di SQL Server  
+
+---
+
+**Intinya:**  
+- Pake **SQL Server yang sama** dengan PI AF  
+- Pastiin **domain**, **SSL**, dan **versi software** kompatibel  
+- Siapin **service account** dan **PI mapping**  
+
+Gitu aja! Kalo ada yang masih ngejelimet, gw siap bantu troubleshoot 👨💻
+
+
+
